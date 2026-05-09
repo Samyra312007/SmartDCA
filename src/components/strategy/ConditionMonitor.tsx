@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Card, CardHeader, CardContent }    from "@/components/ui/Card";
-import { Badge }                            from "@/components/ui/Badge";
-import { Button }                           from "@/components/ui/Button";
+import { Card, CardHeader, CardContent }    from "@/components/ui/card";
+import { Badge }                            from "@/components/ui/badge";
+import { Button }                           from "@/components/ui/button";
 import { useStrategyVoice }                 from "@/hooks/useStrategyVoice";
 import { cn }                               from "@/lib/utils";
 import type { Strategy }                    from "@/types";

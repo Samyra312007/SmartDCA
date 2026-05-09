@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Silence Turbopack error when webpack config is present
+  turbopack: {},
+
   webpack: (config, { isServer, webpack }) => {
 
     // Solana/Anchor browser fixes

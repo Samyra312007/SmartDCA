@@ -3,7 +3,7 @@
 import { useEffect, useState }  from "react";
 import { useWallet }            from "@solana/wallet-adapter-react";
 import { useAccount }           from "wagmi";
-import { Card }                 from "@/components/ui/Card";
+import { Card }                 from "@/components/ui/card";
 import { cn }                   from "@/lib/utils";
 
 interface Props {

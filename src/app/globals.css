@@ -4,55 +4,121 @@
 
 @import "@solana/wallet-adapter-react-ui/styles.css";
 
-:root {
-  --background: #0a0a0b;
-  --foreground: #ffffff;
-  --card:       #1c1c1e;
-  --border:     #2c2c2e;
-  --purple:     #9945FF;
-  --green:      #14F195;
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 268 100% 64%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 155 89% 51%;
+    --secondary-foreground: 0 0% 0%;
+
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 268 100% 64%;
+    --accent-foreground: 268 100% 64%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 12%;
+    --input: 0 0% 12%;
+    --ring: 268 100% 64%;
+
+    --radius: 0.75rem;
+
+    --solana-purple: 268 100% 64%;
+    --solana-green: 155 89% 51%;
+  }
+
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 268 100% 64%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 155 89% 51%;
+    --secondary-foreground: 0 0% 0%;
+
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 268 100% 64%;
+    --accent-foreground: 268 100% 64%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 12%;
+    --input: 0 0% 12%;
+    --ring: 268 100% 64%;
+  }
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
 }
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-  background: var(--background);
-  color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+@layer components {
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-solana-purple to-solana-green;
+  }
+
+  .glass-card {
+    @apply bg-card/50 border-border/50;
+    backdrop-filter: blur(24px);
+  }
+
+  .glow-purple {
+    @apply shadow-[0_0_20px_-5px_rgba(153,69,255,0.3)];
+  }
+
+  .glow-green {
+    @apply shadow-[0_0_20px_-5px_rgba(20,241,149,0.3)];
+  }
+
+  /* Custom Wallet Adapter Styles */
+  .wallet-adapter-button {
+    @apply !bg-gradient-to-r !from-solana-purple !to-solana-green !rounded-xl !transition-opacity hover:!opacity-90 !h-10 !text-sm !font-bold !text-black !px-6 !border-none !shadow-lg shadow-solana-purple/20 !important;
+  }
+
+  .wallet-adapter-dropdown-list {
+    @apply !bg-card !border !border-border !rounded-xl !p-2 !mt-2 !shadow-2xl !z-[100] !important;
+  }
+
+  .wallet-adapter-dropdown-list-item {
+    @apply !text-white hover:!bg-white/5 !rounded-lg !text-xs !font-medium !important;
+  }
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  @apply w-1.5;
 }
 ::-webkit-scrollbar-track {
-  background: var(--card);
+  @apply bg-transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
-}
-
-.wallet-adapter-button {
-  background: linear-gradient(135deg, #9945FF, #14F195) !important;
-  border-radius: 8px !important;
-}
-
-.gradient-text {
-  background: linear-gradient(135deg, #9945FF, #14F195);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.glass-card {
-  background: rgba(28, 28, 30, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
+  @apply bg-muted rounded-full hover:bg-muted-foreground/30 transition-colors;
 }
