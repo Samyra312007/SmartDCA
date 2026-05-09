@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
-import { Inter }         from "next/font/google";
+import type { Metadata }   from "next";
+import { Inter }           from "next/font/google";
 import "./globals.css";
-import { Providers }     from "@/components/layout/Providers";
+import { Providers }       from "@/components/layout/Providers";
+import { VoiceProvider }   from "@/components/voice/VoiceProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,7 +20,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} bg-[#0A0A0B] text-white`}>
         <Providers>
-          {children}
+          <VoiceProvider>
+            {children}
+          </VoiceProvider>
         </Providers>
       </body>
     </html>
