@@ -45,6 +45,24 @@ const nextConfig = {
       ];
     }
 
+    // Silence ox/viem critical dependency warnings
+    config.module.rules.push({
+      test: /node_modules\/ox\/.*\.js$/,
+      loader: 'string-replace-loader',
+      options: {
+        search: 'critical dependency',
+        replace: '',
+        flags: 'i'
+      }
+    });
+
+    // Alternative way to silence specific warnings if the above doesn't work well
+    config.ignoreWarnings = [
+      { module: /node_modules\/ox/ },
+      { module: /node_modules\/viem/ },
+      { message: /Critical dependency: the request of a dependency is an expression/ }
+    ];
+
     return config;
   },
 
@@ -71,6 +89,7 @@ const nextConfig = {
     "@solana/wallet-adapter-react",
     "@solana/wallet-adapter-react-ui",
     "@solana/wallet-adapter-wallets",
+    "@solana/spl-token",
     "@lifi/widget",
     "@lifi/sdk",
   ],

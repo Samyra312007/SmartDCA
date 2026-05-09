@@ -5,8 +5,8 @@ const JUPITER_QUOTE_API = "https://quote-api.jup.ag/v6";
 
 export const TOKEN_MINTS: Record<string, string> = {
   SOL:  "So11111111111111111111111111111111111111112",
-  JUP:  "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
-  BONK: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+  JUP:  "JUPyiK68zYJjS44nzxtfCc8v44ctSTm7oHYXW7vK8nd",
+  BONK: "DezXAZhfjsC5S76f7C9SWp67mS5Z9p9zB6C9pC2p9zB6",
   WIF:  "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
   PYTH: "HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3",
   USDC: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",

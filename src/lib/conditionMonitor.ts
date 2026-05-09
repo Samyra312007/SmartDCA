@@ -44,7 +44,8 @@ export async function evaluateCondition(
       const oldPrice = snapshots?.[0]?.price ?? currentPrice;
       const dropPct  = ((oldPrice - currentPrice) / oldPrice) * 100;
 
-      const threshold = strategy.condition_value / 100;
+      // condition_value is raw percent (e.g. 5 for 5%)
+      const threshold = strategy.condition_value;
       const met       = dropPct >= threshold;
 
       return {
@@ -58,7 +59,7 @@ export async function evaluateCondition(
     }
 
     case "price_below": {
-      const threshold = strategy.condition_value / 100;
+      const threshold = strategy.condition_value;
       const met       = currentPrice <= threshold;
 
       return {
@@ -72,7 +73,7 @@ export async function evaluateCondition(
     }
 
     case "price_above": {
-      const threshold = strategy.condition_value / 100;
+      const threshold = strategy.condition_value;
       const met       = currentPrice >= threshold;
 
       return {
@@ -165,13 +166,18 @@ export async function checkAllActiveStrategies(): Promise<{
 
     if (result.met) {
       triggered++;
-      await supabase
-        .from("strategies")
-        .update({
-          last_triggered: new Date().toISOString(),
-          trigger_count:  strategy.trigger_count + 1,
-        })
-        .eq("id", strategy.id);
+      
+      // Call the execution endpoint to process the trade
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+        await fetch(`${baseUrl}/api/execute`, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ strategyId: strategy.id }),
+        });
+      } catch (err) {
+        console.error(`Failed to trigger execution for strategy ${strategy.id}:`, err);
+      }
     }
   }
 
