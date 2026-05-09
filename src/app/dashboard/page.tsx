@@ -178,6 +178,41 @@ function StatsBar({ strategies }: { strategies: Strategy[] }) {
   );
 }
 
+function SeedDemoButton({
+  wallet,
+  onSeeded,
+}: {
+  wallet:   string;
+  onSeeded: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+
+  async function handleSeed() {
+    setLoading(true);
+    try {
+      await fetch("/api/seed", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ wallet }),
+      });
+      onSeeded();
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Button
+      variant="secondary"
+      size="sm"
+      onClick={handleSeed}
+      loading={loading}
+    >
+      🎮 Load Demo Data
+    </Button>
+  );
+}
+
 
 export default function DashboardPage() {
   const { publicKey, connected } = useWallet();
