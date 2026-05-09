@@ -14,11 +14,6 @@ use crate::instructions::{
 
 use crate::state::StrategyCondition;
 
-pub(crate) use instructions::deposit::__client_accounts_deposit;
-pub(crate) use instructions::execute_trade::__client_accounts_execute_trade;
-pub(crate) use instructions::initialize::__client_accounts_initialize;
-pub(crate) use instructions::set_active::__client_accounts_set_active;
-pub(crate) use instructions::withdraw::__client_accounts_withdraw;
 
 declare_id!("4uH1ZvU29XFzRCEk4S7dNT29gUWMPU3gHaZQdhiacxhF");
 
@@ -40,7 +35,7 @@ pub mod smart_dca {
         instructions::withdraw::handler(ctx,amount)
     }
 
-    pub fn execute_trade<'info>(
+     pub fn execute_trade<'info>(
     ctx: Context<'_, '_, '_, 'info, ExecuteTrade<'info>>,
     condition_met_proof: ConditionProof,
 ) -> Result<()> {
