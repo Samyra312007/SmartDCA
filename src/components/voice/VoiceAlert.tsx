@@ -26,6 +26,7 @@ export function VoiceAlert({
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef   = useRef<number>(0);
+  const loadingBarHeights = [10, 18, 28, 22, 14];
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -152,7 +153,7 @@ export function VoiceAlert({
                 key={i}
                 className="w-1.5 bg-purple-500 rounded-full animate-pulse"
                 style={{
-                  height:           `${Math.random() * 24 + 8}px`,
+                  height:           `${loadingBarHeights[i]}px`,
                   animationDelay:   `${i * 0.1}s`,
                   animationDuration: "0.8s",
                 }}

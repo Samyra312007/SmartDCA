@@ -4,13 +4,11 @@ pub mod errors;
 pub mod instructions;
 pub mod state;
 
-use crate::instructions::{
-    initialize::Initialize,
-    deposit::Deposit,
-    withdraw::Withdraw,
-    execute_trade::{ExecuteTrade, ConditionProof},
-    set_active::SetActive,
-};
+pub use crate::instructions::deposit::*;
+pub use crate::instructions::execute_trade::*;
+pub use crate::instructions::initialize::*;
+pub use crate::instructions::set_active::*;
+pub use crate::instructions::withdraw::*;
 
 use crate::state::StrategyCondition;
 

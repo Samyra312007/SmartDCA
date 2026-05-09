@@ -47,16 +47,16 @@ export async function POST(req: NextRequest) {
     }
 
     if (strategyId) {
-      supabase
-        .from("voice_alerts")
-        .insert([{
-          strategy_id: strategyId,
-          alert_type:  type,
-          message:     script,
-          played:      false,
-        }])
-        .then(() => {})
-        .catch(() => {});
+      void (async () => {
+        await supabase
+          .from("voice_alerts")
+          .insert([{
+            strategy_id: strategyId,
+            alert_type:  type,
+            message:     script,
+            played:      false,
+          }]);
+      })();
     }
 
     return new NextResponse(audioBuffer, {

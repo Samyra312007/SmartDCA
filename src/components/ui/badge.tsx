@@ -14,6 +14,10 @@ const badgeVariants = cva(
           "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80",
         destructive:
           "bg-destructive/10 text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/20",
+        green:
+          "border-green-500/20 bg-green-500/10 text-green-400",
+        gray:
+          "border-gray-700 bg-gray-800 text-gray-400",
         outline:
           "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
         ghost:
@@ -30,14 +34,22 @@ const badgeVariants = cva(
 function Badge({
   className,
   variant = "default",
+  dot = false,
   render,
+  children,
   ...props
-}: useRender.ComponentProps<"span"> & VariantProps<typeof badgeVariants>) {
+}: useRender.ComponentProps<"span"> & VariantProps<typeof badgeVariants> & { dot?: boolean }) {
   return useRender({
     defaultTagName: "span",
     props: mergeProps<"span">(
       {
         className: cn(badgeVariants({ variant }), className),
+        children: (
+          <>
+            {dot && <span className="size-1.5 rounded-full bg-current" />}
+            {children}
+          </>
+        ),
       },
       props
     ),

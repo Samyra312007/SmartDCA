@@ -1,24 +1,9 @@
-import { createConfig, EVM, Solana } from "@lifi/sdk";
-import { getWalletClient }           from "@wagmi/core";
+import { createConfig } from "@lifi/sdk";
 
 
 export function initLiFi() {
   createConfig({
     integrator: process.env.NEXT_PUBLIC_LIFI_INTEGRATOR ?? "smartdca",
-
-    providers: [
-      EVM({
-
-        getWalletClient: () => getWalletClient({} as any),
-      }),
-      Solana({
-
-        async getWalletAdapter({ name }) {
-
-          return null as any;
-        },
-      }),
-    ],
   });
 }
 

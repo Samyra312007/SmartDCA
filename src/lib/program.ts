@@ -5,13 +5,12 @@
  * and the SmartDCA Anchor program on Solana devnet.
  */
 
-import {
+  import {
     Connection,
     PublicKey,
     SystemProgram,
     Transaction,
     SYSVAR_RENT_PUBKEY,
-    Keypair,
   } from "@solana/web3.js";
   import {
     AnchorProvider,
@@ -21,16 +20,14 @@ import {
   } from "@coral-xyz/anchor";
   import {
     TOKEN_PROGRAM_ID,
-    createInitializeAccountInstruction,
-    getMinimumBalanceForRentExemptAccount,
-    ACCOUNT_SIZE,
     createAssociatedTokenAccountInstruction,
     getAssociatedTokenAddress,
   } from "@solana/spl-token";
   
+  const PROGRAM_ID_FALLBACK = "4uH1ZvU29XFzRCEk4S7dNT29gUWMPU3gHaZQdhiacxhF";
+
   export const PROGRAM_ID = new PublicKey(
-    process.env.NEXT_PUBLIC_PROGRAM_ID ??
-    "4uH1ZvU29XFzRCEk4S7dNT29gUWMPU3gHaZQdhiacxhF"
+    process.env.NEXT_PUBLIC_PROGRAM_ID || PROGRAM_ID_FALLBACK
   );
   
   export const USDC_MINT = new PublicKey(
@@ -311,7 +308,10 @@ import {
     remainingAccounts: { pubkey: PublicKey; isWritable: boolean; isSigner: boolean }[] = []
   ): Promise<{ tx: Transaction }> {
     const program = getProgram(provider);
-    const escrow  = await program.account.escrowAccount.fetch(escrowPda);
+    const escrowAccount = (program.account as unknown as {
+      escrowAccount: { fetch: (address: PublicKey) => Promise<{ usdcTokenAccount: PublicKey }> };
+    }).escrowAccount;
+    const escrow  = await escrowAccount.fetch(escrowPda);
     const ix = await program.methods.executeTrade(proof).accounts({
         crank:            provider.wallet.publicKey,
         escrowAccount:    escrowPda,

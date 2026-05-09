@@ -1,7 +1,7 @@
 import { Connection, PublicKey, VersionedTransaction } from "@solana/web3.js";
 
-const JUPITER_PRICE_API = "https://price.jup.ag/v6";
-const JUPITER_QUOTE_API = "https://quote-api.jup.ag/v6";
+const JUPITER_PRICE_API = "https://lite-api.jup.ag/price/v3";
+const JUPITER_SWAP_API = "https://lite-api.jup.ag/swap/v1";
 
 export const TOKEN_MINTS: Record<string, string> = {
   SOL:  "So11111111111111111111111111111111111111112",
@@ -25,8 +25,11 @@ export interface TokenPrice {
 }
 
 export interface PriceResponse {
-  data:      Record<string, TokenPrice>;
-  timeTaken: number;
+  [mint: string]: {
+    usdPrice?:       number;
+    price?:          number;
+    priceChange24h?: number;
+  };
 }
 
 export interface QuoteResponse {
@@ -84,7 +87,7 @@ export async function getTokenPrice(
   tokenMint: string
 ): Promise<number | null> {
   try {
-    const url = `${JUPITER_PRICE_API}/price?ids=${tokenMint}`;
+    const url = `${JUPITER_PRICE_API}?ids=${tokenMint}`;
     const res = await fetch(url, {
       headers: { "Accept": "application/json" },
       next:    { revalidate: 30 }, 
@@ -92,11 +95,11 @@ export async function getTokenPrice(
 
     if (!res.ok) throw new Error(`Price API error: ${res.status}`);
 
-    const data: PriceResponse = await res.json();
-    const priceData = data.data[tokenMint];
+    const data = await res.json() as PriceResponse;
+    const priceData = data[tokenMint];
 
     if (!priceData) return null;
-    return priceData.price;
+    return priceData.usdPrice ?? priceData.price ?? null;
   } catch (err) {
     console.error("getTokenPrice error:", err);
     return null;
@@ -108,16 +111,19 @@ export async function getMultipleTokenPrices(
 ): Promise<Record<string, number>> {
   try {
     const ids = tokenMints.join(",");
-    const url = `${JUPITER_PRICE_API}/price?ids=${ids}`;
+    const url = `${JUPITER_PRICE_API}?ids=${ids}`;
     const res = await fetch(url);
 
     if (!res.ok) throw new Error(`Price API error: ${res.status}`);
 
-    const data: PriceResponse = await res.json();
+    const data = await res.json() as PriceResponse;
     const prices: Record<string, number> = {};
 
-    for (const [mint, priceData] of Object.entries(data.data)) {
-      prices[mint] = priceData.price;
+    for (const [mint, priceData] of Object.entries(data)) {
+      const price = priceData.usdPrice ?? priceData.price;
+      if (typeof price === "number") {
+        prices[mint] = price;
+      }
     }
 
     return prices;
@@ -159,7 +165,7 @@ export async function getSwapQuote(
       swapMode:     "ExactIn",
     });
 
-    const url = `${JUPITER_QUOTE_API}/quote?${params}`;
+    const url = `${JUPITER_SWAP_API}/quote?${params}`;
     const res = await fetch(url);
 
     if (!res.ok) {
@@ -209,7 +215,7 @@ export async function buildSwapTransaction(
       prioritizationFeeLamports: 1000,  
     };
 
-    const res = await fetch(`${JUPITER_QUOTE_API}/swap`, {
+    const res = await fetch(`${JUPITER_SWAP_API}/swap`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify(swapRequest),

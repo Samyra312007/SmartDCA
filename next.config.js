@@ -1,7 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Silence Turbopack error when webpack config is present
-  turbopack: {},
+  turbopack: {
+    root: __dirname,
+  },
 
   webpack: (config, { isServer, webpack }) => {
 

@@ -3,12 +3,13 @@ import { supabase }                  from "@/lib/supabase";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const { data, error } = await supabase
     .from("strategies")
     .select("*, trades(*)")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (error) {
@@ -20,14 +21,15 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const body = await req.json();
+  const { id } = await params;
 
   const { data, error } = await supabase
     .from("strategies")
     .update({ ...body, updated_at: new Date().toISOString() })
-    .eq("id", params.id)
+    .eq("id", id)
     .select()
     .single();
 
