@@ -12,11 +12,13 @@ import { Input }                        from "@/components/ui/Input";
 import { Select }                       from "@/components/ui/Select";
 import { Alert }                        from "@/components/ui/Alert";
 import { BridgeWidget }                 from "@/components/bridge/BridgeWidget";
+import { PROGRAM_ID } from "@/lib/program";
 import {
   buildCreateStrategyTx,
   buildDepositTx,
   USDC_MINT,
-}                                       from "@/lib/program";
+}   
+                                    from "@/lib/program";
 import {
   SUPPORTED_TOKENS,
   conditionDescription,
@@ -227,78 +229,74 @@ export default function CreatePage() {
     setForm((prev) => ({ ...prev, ...updates }));
   }
 
+// In src/app/create/page.tsx, replace handleCreateOnChain with this:
 
-  async function handleCreateOnChain() {
-    if (!publicKey || !signTransaction) return;
+async function handleCreateOnChain() {
+  if (!publicKey || !signTransaction) return;
 
-    setLoading(true);
-    setError("");
+  setLoading(true);
+  setError("");
 
-    try {
-      const provider = new AnchorProvider(
-        connection,
-        { publicKey, signTransaction } as any,
-        { commitment: "confirmed" }
-      );
+  try {
+    const provider = new AnchorProvider(
+      connection,
+      { publicKey, signTransaction } as any,
+      { commitment: "confirmed" }
+    );
 
-      const id = Math.floor(Date.now() / 1000);
+    const { tx, escrowPda, escrowUsdc } = await buildCreateStrategyTx(
+      provider,
+      form.conditionType,                          // "price_drop_percent" | ...
+      Math.round(form.conditionValue * 100),       // e.g. 5% → 500 bps
+      form.conditionWindow,                        // hours (24)
+      Math.round(form.amountPerTrade * 1_000_000), // $50 → 50_000_000
+      form.tokenOutMint,                           // output token mint
+    );
 
-      const { tx, strategyPDA } = await buildCreateStrategyTx(
-        provider,
-        id,
-        form.tokenOutMint as any,
-        ["price_drop_percent","price_below","price_above","day_of_week"]
-          .indexOf(form.conditionType),
-        Math.round(form.conditionValue * 100),  
-        form.conditionWindow,
-        Math.round(form.amountPerTrade * 1_000_000), 
-      );
+    // Sign + send
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+    tx.recentBlockhash = blockhash;
+    tx.feePayer = publicKey;
 
-      const { blockhash } = await connection.getLatestBlockhash();
-      tx.recentBlockhash   = blockhash;
-      tx.feePayer          = publicKey;
+    const signed = await signTransaction(tx);
+    const sig = await connection.sendRawTransaction(signed.serialize());
+    await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
 
+    setTxSig(sig);
 
-      const signed = await signTransaction(tx);
-      const sig    = await connection.sendRawTransaction(signed.serialize());
-      await connection.confirmTransaction(sig, "confirmed");
+    // Save to Supabase
+    const res = await fetch("/api/strategies", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        wallet_address:    publicKey.toString(),
+        token_in:          "USDC",
+        token_in_mint:     USDC_MINT.toString(),
+        token_out:         form.tokenOut,
+        token_out_mint:    form.tokenOutMint,
+        amount_per_trade:  form.amountPerTrade * 1_000_000,
+        condition_type:    form.conditionType,
+        condition_value:   form.conditionValue,
+        condition_window:  form.conditionWindow,
+        escrow_address:    escrowPda.toString(),
+        program_id:        PROGRAM_ID.toString(),
+        chain_strategy_id: Date.now(),
+        deploy_tx:         sig,
+        funded_amount:     0,
+        status:            "active",
+      }),
+    });
 
-      setTxSig(sig);
-
-      const res = await fetch("/api/strategies", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({
-          wallet_address:   publicKey.toString(),
-          token_in:         "USDC",
-          token_in_mint:    USDC_MINT.toString(),
-          token_out:        form.tokenOut,
-          token_out_mint:   form.tokenOutMint,
-          amount_per_trade: form.amountPerTrade * 1_000_000,
-          condition_type:   form.conditionType,
-          condition_value:  form.conditionValue,
-          condition_window: form.conditionWindow,
-          escrow_address:   strategyPDA.toString(),
-          program_id:       process.env.NEXT_PUBLIC_PROGRAM_ID,
-          chain_strategy_id: id,
-          deploy_tx:        sig,
-          funded_amount:    0,
-          status:           "active",
-        }),
-      });
-
-      const data = await res.json();
-      setStrategyId(data.strategy?.id);
-
-      voice.announceStrategyCreated(data.strategy?.id);
-
-      setStep(1);
-    } catch (err: any) {
-      setError(err.message ?? "Transaction failed");
-    } finally {
-      setLoading(false);
-    }
+    const data = await res.json();
+    setStrategyId(data.strategy?.id);
+    voice.announceStrategyCreated(data.strategy?.id);
+    setStep(1);
+  } catch (err: any) {
+    setError(err.message ?? "Transaction failed");
+  } finally {
+    setLoading(false);
   }
+}
 
 
   async function handleDirectDeposit() {
@@ -320,7 +318,6 @@ export default function CreatePage() {
 
       const { tx } = await buildDepositTx(
         provider,
-        chainId,
         Math.round(form.fundingAmount * 1_000_000),
       );
 
