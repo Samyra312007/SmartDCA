@@ -35,18 +35,48 @@ export default function CreatePage() {
     fundingAmount: 200,
   });
 
+  function validateForm() {
+    if (form.amountPerTrade <= 0) {
+      setError("Amount per trade must be greater than 0");
+      return false;
+    }
+    if (form.conditionValue <= 0) {
+      setError("Condition value must be greater than 0");
+      return false;
+    }
+    if (form.conditionWindow <= 0) {
+      setError("Condition window must be greater than 0");
+      return false;
+    }
+    if (!form.tokenOut || !form.tokenOutMint) {
+      setError("Please select a token");
+      return false;
+    }
+    return true;
+  }
+
   async function handleCreate() {
     if (!publicKey || !signTransaction) return;
+    
+    if (!validateForm()) return;
+    
     setLoading(true);
+    setError("");
     try {
+      // Step 1: Build transaction
       const provider = new AnchorProvider(connection, { publicKey, signTransaction } as any, { commitment: "confirmed" });
-      const { tx, escrowPda } = await buildCreateStrategyTx(provider, form.conditionType, form.conditionValue * 100, 24, form.amountPerTrade * 1_000_000, form.tokenOutMint);
+      const { tx, escrowPda } = await buildCreateStrategyTx(provider, form.conditionType, form.conditionValue * 100, form.conditionWindow, form.amountPerTrade * 1_000_000, form.tokenOutMint);
+      
+      // Step 2: Sign and send transaction
       const { blockhash } = await connection.getLatestBlockhash();
       tx.recentBlockhash = blockhash;
       tx.feePayer = publicKey;
       const sig = await connection.sendRawTransaction((await signTransaction(tx)).serialize());
+      
+      // Step 3: Confirm transaction
       await connection.confirmTransaction(sig, "confirmed");
 
+      // Step 4: Save to database
       const res = await fetch("/api/strategies", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -57,14 +87,38 @@ export default function CreatePage() {
           amount_per_trade: form.amountPerTrade * 1_000_000,
           condition_type: form.conditionType,
           condition_value: form.conditionValue,
+          condition_window: form.conditionWindow,
           escrow_address: escrowPda.toString(),
           status: "active",
         }),
       });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to save strategy to database");
+      }
+      
       const data = await res.json();
       setStrategyId(data.strategy?.id);
       setStep(1);
-    } catch (e: any) { setError(e.message); } finally { setLoading(false); }
+    } catch (e: any) {
+      console.error("Deployment error:", e);
+      let errorMessage = "Failed to deploy strategy";
+      
+      if (e.message.includes("insufficient funds")) {
+        errorMessage = "Insufficient funds for transaction";
+      } else if (e.message.includes("timeout")) {
+        errorMessage = "Transaction timed out. Please try again.";
+      } else if (e.message.includes("network")) {
+        errorMessage = "Network error. Please check your connection.";
+      } else if (e.message) {
+        errorMessage = e.message;
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (!connected) return <div className="min-h-screen bg-background"><Navbar /><main className="pt-32 flex justify-center px-6"><Card className="p-12 text-center max-w-md w-full"><Wallet className="size-10 mx-auto mb-4" /><h2 className="text-xl font-black uppercase">Connect Wallet</h2></Card></main></div>;
@@ -77,6 +131,7 @@ export default function CreatePage() {
         
         {step === 0 && (
           <div className="space-y-6">
+            {error && <Alert variant="destructive">{error}</Alert>}
             <Card className="bg-card/30 backdrop-blur-sm">
               <CardContent className="pt-6 space-y-6">
                 <div className="grid grid-cols-3 gap-3">
@@ -94,7 +149,7 @@ export default function CreatePage() {
                 <Input type="number" value={form.conditionValue} onChange={e => setForm({...form, conditionValue: Number(e.target.value)})} className="h-12 bg-muted/30 font-bold" />
               </CardContent>
             </Card>
-            <Button size="lg" className="w-full h-14 bg-foreground text-background font-black" onClick={handleCreate} disabled={loading}>{loading ? "DEPOYING..." : "DEPLOY STRATEGY"}</Button>
+            <Button size="lg" className="w-full h-14 bg-foreground text-background font-black" onClick={handleCreate} disabled={loading}>{loading ? "DEPLOYING..." : "DEPLOY STRATEGY"}</Button>
           </div>
         )}
 
