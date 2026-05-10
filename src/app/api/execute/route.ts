@@ -4,6 +4,7 @@ import { getSwapQuote, TOKEN_MINTS } from "@/lib/jupiter";
 import { evaluateCondition } from "@/lib/conditionMonitor";
 import { supabase } from "@/lib/supabase";
 import { USDC_MINT } from "@/lib/program";
+import { SWAP_CONFIG, getTokenDecimals, TX_CONFIG, ERROR_MESSAGES } from "@/lib/config";
 
 export async function POST(req: NextRequest) {
   try {
@@ -59,8 +60,8 @@ export async function POST(req: NextRequest) {
     const quote = await getSwapQuote(
       USDC_MINT.toString(),
       strategy.token_out_mint,
-      amountIn, 
-      50
+      amountIn,
+      SWAP_CONFIG.DEFAULT_SLIPPAGE_BPS
     );
 
     if (!quote) {
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
     }
 
     const amountOut = Number(quote.outAmount);
-    const decimals = tokenSymbol === "SOL" ? 9 : 6;
+    const decimals = getTokenDecimals(tokenSymbol);
     const humanOut = amountOut / Math.pow(10, decimals);
     const priceImpact = parseFloat(quote.priceImpactPct);
 
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
         amount_in: strategy.amount_per_trade / 1_000_000,
         amount_out: humanOut,
         price_at_trade: conditionResult.currentPrice,
-        tx_signature: "sim_" + Math.random().toString(36).slice(2, 10),
+        tx_signature: TX_CONFIG.SIMULATED_PREFIX + Math.random().toString(36).slice(2, 10),
         route_used: quote.routePlan[0]?.swapInfo?.label ?? "Jupiter",
         price_impact: priceImpact,
       }])

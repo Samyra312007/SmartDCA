@@ -1,4 +1,5 @@
 import { supabase }   from "./supabase";
+import { API_ENDPOINTS, BRIDGE_CONFIG, TOKEN_CONFIG, getUSDCMint } from "./config";
 
 
 export interface BridgeRoute {
@@ -44,7 +45,7 @@ export interface BridgeStatus {
 }
 
 
-const LIFI_API = "https://li.quest/v1";
+const LIFI_API = API_ENDPOINTS.LIFI;
 
 
 export async function getBridgeQuote(
@@ -65,7 +66,7 @@ export async function getBridgeQuote(
       fromAmount,
       fromAddress,
       toAddress,
-      integrator: "smartdca",
+      integrator: BRIDGE_CONFIG.INTEGRATOR,
     });
 
     const res = await fetch(`${LIFI_API}/quote?${params}`, {
@@ -122,11 +123,11 @@ export async function getBridgeRoutes(
       fromAmount,
       fromAddress,
       toAddress,
-      integrator:   "smartdca",
+      integrator:   BRIDGE_CONFIG.INTEGRATOR,
       options:      JSON.stringify({
-        slippage:   0.005,     
-        order:      "FASTEST", 
-        maxPriceImpact: 0.4,
+        slippage:   BRIDGE_CONFIG.SLIPPAGE,
+        order:      BRIDGE_CONFIG.ORDER,
+        maxPriceImpact: BRIDGE_CONFIG.MAX_PRICE_IMPACT,
       }),
     });
 
@@ -136,7 +137,7 @@ export async function getBridgeRoutes(
     const data = await res.json();
     const routes = data.routes ?? [];
 
-    return routes.slice(0, 3).map((route: any) => ({
+    return routes.slice(0, BRIDGE_CONFIG.MAX_ROUTES).map((route: any) => ({
       id:            route.id,
       fromChainId:   route.fromChainId,
       fromChainName: fromChain,
@@ -173,7 +174,7 @@ export async function checkBridgeStatus(
       txHash,
       fromChain,
       toChain,
-      integrator: "smartdca",
+      integrator: BRIDGE_CONFIG.INTEGRATOR,
     });
 
     const res = await fetch(`${LIFI_API}/status?${params}`);
@@ -215,9 +216,9 @@ export async function recordBridgeTransaction(data: {
       strategy_id:   data.strategyId,
       wallet_address: data.walletAddress,
       from_chain:    data.fromChain,
-      to_chain:      "solana",
+      to_chain:      BRIDGE_CONFIG.DEFAULT_TO_CHAIN.toLowerCase(),
       from_token:    data.fromToken,
-      to_token:      "USDC",
+      to_token:      BRIDGE_CONFIG.DEFAULT_TO_TOKEN,
       amount:        data.amount,
       lifi_tx_hash:  data.lifiTxHash,
       status:        "pending",
@@ -255,7 +256,7 @@ export async function getBridgeHistory(
     .select("*")
     .eq("wallet_address", walletAddress)
     .order("created_at", { ascending: false })
-    .limit(10);
+    .limit(BRIDGE_CONFIG.MAX_ROUTES * 3); // Use multiple of max routes for history
 
   if (error) return [];
   return data;

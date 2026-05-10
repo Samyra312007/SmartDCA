@@ -1,6 +1,7 @@
 import { getTokenPrice, TOKEN_MINTS } from "./jupiter";
 import { supabase }                   from "./supabase";
 import type { Strategy }              from "@/types";
+import { STRATEGY_CONFIG, ENV } from "./config";
 
 
 export interface ConditionResult {
@@ -28,7 +29,7 @@ export async function evaluateCondition(
   switch (strategy.condition_type) {
 
     case "price_drop_percent": {
-      const hoursAgo    = strategy.condition_window ?? 24;
+      const hoursAgo    = strategy.condition_window ?? STRATEGY_CONFIG.DEFAULT_CONDITION_WINDOW;
       const cutoff      = new Date(
         Date.now() - hoursAgo * 3600 * 1000
       ).toISOString();
@@ -146,12 +147,12 @@ export async function checkAllActiveStrategies(): Promise<{
 
     if (strategy.last_triggered) {
       const lastTime  = new Date(strategy.last_triggered).getTime();
-      const hourAgo   = Date.now() - 3600 * 1000;
-      if (lastTime > hourAgo) {
+      const cooldownMs = STRATEGY_CONFIG.COOLDOWN_MINUTES * 60 * 1000;
+      if (lastTime > Date.now() - cooldownMs) {
         results.push({
           strategyId: strategy.id,
           met:        false,
-          reason:     "Cooldown: less than 1 hour since last trade",
+          reason:     `Cooldown: less than ${STRATEGY_CONFIG.COOLDOWN_MINUTES} minutes since last trade`,
         });
         continue;
       }
@@ -169,7 +170,7 @@ export async function checkAllActiveStrategies(): Promise<{
       
       // Call the execution endpoint to process the trade
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+        const baseUrl = ENV.APP_URL;
         await fetch(`${baseUrl}/api/execute`, {
           method:  "POST",
           headers: { "Content-Type": "application/json" },

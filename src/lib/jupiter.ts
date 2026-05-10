@@ -1,18 +1,16 @@
 import { Connection, PublicKey, VersionedTransaction } from "@solana/web3.js";
-
-const JUPITER_PRICE_API = "https://lite-api.jup.ag/price/v3";
-const JUPITER_SWAP_API = "https://lite-api.jup.ag/swap/v1";
+import { API_ENDPOINTS, TOKEN_CONFIG, getUSDCMint, SWAP_CONFIG, PRICE_CONFIG } from "./config";
 
 export const TOKEN_MINTS: Record<string, string> = {
-  SOL:  "So11111111111111111111111111111111111111112",
-  JUP:  "JUPyiK68zYJjS44nzxtfCc8v44ctSTm7oHYXW7vK8nd",
-  BONK: "DezXAZhfjsC5S76f7C9SWp67mS5Z9p9zB6C9pC2p9zB6",
-  WIF:  "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
-  PYTH: "HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3",
-  USDC: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  SOL: TOKEN_CONFIG.SOL.MINT,
+  JUP: TOKEN_CONFIG.JUP.MINT,
+  BONK: TOKEN_CONFIG.BONK.MINT,
+  WIF: TOKEN_CONFIG.WIF.MINT,
+  PYTH: TOKEN_CONFIG.PYTH.MINT,
+  USDC: getUSDCMint(),
 };
 
-export const USDC_DEVNET = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
+export const USDC_DEVNET = TOKEN_CONFIG.USDC.MINT_DEVNET;
 
 
 export interface TokenPrice {
@@ -87,10 +85,10 @@ export async function getTokenPrice(
   tokenMint: string
 ): Promise<number | null> {
   try {
-    const url = `${JUPITER_PRICE_API}?ids=${tokenMint}`;
+    const url = `${API_ENDPOINTS.JUPITER_PRICE}?ids=${tokenMint}`;
     const res = await fetch(url, {
       headers: { "Accept": "application/json" },
-      next:    { revalidate: 30 }, 
+      next:    { revalidate: PRICE_CONFIG.REVALIDATE_SECONDS },
     });
 
     if (!res.ok) throw new Error(`Price API error: ${res.status}`);
@@ -111,7 +109,7 @@ export async function getMultipleTokenPrices(
 ): Promise<Record<string, number>> {
   try {
     const ids = tokenMints.join(",");
-    const url = `${JUPITER_PRICE_API}?ids=${ids}`;
+    const url = `${API_ENDPOINTS.JUPITER_PRICE}?ids=${ids}`;
     const res = await fetch(url);
 
     if (!res.ok) throw new Error(`Price API error: ${res.status}`);
@@ -154,7 +152,7 @@ export async function getSwapQuote(
   inputMint:   string,
   outputMint:  string,
   amount:      number,
-  slippageBps: number = 50
+  slippageBps: number = SWAP_CONFIG.DEFAULT_SLIPPAGE_BPS
 ): Promise<QuoteResponse | null> {
   try {
     const params = new URLSearchParams({
@@ -165,7 +163,7 @@ export async function getSwapQuote(
       swapMode:     "ExactIn",
     });
 
-    const url = `${JUPITER_SWAP_API}/quote?${params}`;
+    const url = `${API_ENDPOINTS.JUPITER_SWAP}/quote?${params}`;
     const res = await fetch(url);
 
     if (!res.ok) {
@@ -210,12 +208,12 @@ export async function buildSwapTransaction(
     const swapRequest: SwapRequest = {
       quoteResponse:            quote,
       userPublicKey,
-      wrapAndUnwrapSol:         true,   
-      dynamicComputeUnitLimit:  true,   
-      prioritizationFeeLamports: 1000,  
+      wrapAndUnwrapSol:         SWAP_CONFIG.WRAP_AND_UNWRAP_SOL,
+      dynamicComputeUnitLimit:  SWAP_CONFIG.DYNAMIC_COMPUTE_UNIT_LIMIT,
+      prioritizationFeeLamports: SWAP_CONFIG.PRIORITIZATION_FEE_LAMPORTS,
     };
 
-    const res = await fetch(`${JUPITER_SWAP_API}/swap`, {
+    const res = await fetch(`${API_ENDPOINTS.JUPITER_SWAP}/swap`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify(swapRequest),
@@ -259,9 +257,9 @@ export async function executeSwap(
 
     const rawTransaction = signed.serialize();
     const txid = await connection.sendRawTransaction(rawTransaction, {
-      skipPreflight:        true,
-      maxRetries:           3,
-      preflightCommitment:  "confirmed",
+      skipPreflight:        SWAP_CONFIG.SKIP_PREFLIGHT,
+      maxRetries:           SWAP_CONFIG.MAX_RETRIES,
+      preflightCommitment:  SWAP_CONFIG.PREFLIGHT_COMMITMENT,
     });
 
     const latestBlockHash = await connection.getLatestBlockhash();
@@ -288,7 +286,7 @@ export async function fullSwapPipeline(
   amount:          number,
   userPublicKey:   string,
   signTransaction: (tx: VersionedTransaction) => Promise<VersionedTransaction>,
-  slippageBps:     number = 50
+  slippageBps:     number = SWAP_CONFIG.DEFAULT_SLIPPAGE_BPS
 ): Promise<{
   txid:      string | null;
   quote:     QuoteResponse | null;

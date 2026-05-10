@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { getTokenPrice, getMultipleTokenPrices, TOKEN_MINTS } from "./jupiter";
+import { PRICE_CONFIG, STRATEGY_CONFIG } from "./config";
 
 
 export interface PriceSnapshot {
@@ -103,7 +104,7 @@ export async function getLatestStoredPrice(
 
 export async function getPriceHistory(
   tokenSymbol: string,
-  hours:       number = 24
+  hours:       number = PRICE_CONFIG.HISTORY_HOURS
 ): Promise<{ price: number; time: string }[]> {
   const since = new Date();
   since.setHours(since.getHours() - hours);
@@ -146,7 +147,7 @@ export async function checkCondition(
 
   if (conditionType === 0) {
     const targetDropPct = conditionValue / 100; // 500 → 5.00
-    const previousPrice = await getPriceAtTime(tokenSymbol, conditionWindow);
+    const previousPrice = await getPriceAtTime(tokenSymbol, conditionWindow ?? STRATEGY_CONFIG.DEFAULT_CONDITION_WINDOW);
 
     if (!previousPrice) {
       return {

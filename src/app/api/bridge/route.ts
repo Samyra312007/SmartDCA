@@ -8,6 +8,7 @@ import {
   getBridgeHistory,
 } from "@/lib/bridge";
 import { supabase } from "@/lib/supabase";
+import { BRIDGE_CONFIG, TOKEN_CONFIG, getUSDCMint } from "@/lib/config";
 
 
 export async function GET(req: NextRequest) {
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
   const wallet    = req.nextUrl.searchParams.get("wallet");
   const txHash    = req.nextUrl.searchParams.get("txHash");
   const fromChain = req.nextUrl.searchParams.get("fromChain");
-  const toChain   = req.nextUrl.searchParams.get("toChain") ?? "SOL";
+  const toChain   = req.nextUrl.searchParams.get("toChain") ?? BRIDGE_CONFIG.DEFAULT_TO_CHAIN;
 
   try {
     if (action === "status" && txHash && fromChain) {
@@ -29,8 +30,8 @@ export async function GET(req: NextRequest) {
     }
 
     if (action === "routes") {
-      const fromToken    = req.nextUrl.searchParams.get("fromToken")    ?? "USDC";
-      const fromAmount   = req.nextUrl.searchParams.get("fromAmount")   ?? "100000000";
+      const fromToken    = req.nextUrl.searchParams.get("fromToken")    ?? BRIDGE_CONFIG.DEFAULT_FROM_TOKEN;
+      const fromAmount   = req.nextUrl.searchParams.get("fromAmount")   ?? BRIDGE_CONFIG.DEFAULT_FROM_AMOUNT;
       const fromAddress  = req.nextUrl.searchParams.get("fromAddress")  ?? "";
       const toAddress    = req.nextUrl.searchParams.get("toAddress")    ?? "";
 
@@ -45,7 +46,7 @@ export async function GET(req: NextRequest) {
         fromChain,
         toChain,
         fromToken,
-        "USDC",
+        BRIDGE_CONFIG.DEFAULT_TO_TOKEN,
         fromAmount,
         fromAddress,
         toAddress,
@@ -94,7 +95,7 @@ export async function POST(req: NextRequest) {
         strategyId,
         walletAddress,
         fromChain,
-        fromToken:   fromToken ?? "USDC",
+        fromToken:   fromToken ?? BRIDGE_CONFIG.DEFAULT_FROM_TOKEN,
         amount,
         lifiTxHash,
       });

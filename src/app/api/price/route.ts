@@ -6,6 +6,7 @@ import {
 } from "@/lib/jupiter";
 import { capturePrice, getPriceHistory } from "@/lib/priceTracker";
 import { supabase } from "@/lib/supabase";
+import { PRICE_CONFIG } from "@/lib/config";
 
 export async function GET(req: NextRequest) {
   const token   = req.nextUrl.searchParams.get("token");
@@ -86,7 +87,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body    = await req.json();
-    const tokens  = body.tokens ?? ["SOL", "JUP", "BONK", "WIF"];
+    const tokens  = body.tokens ?? PRICE_CONFIG.DEFAULT_TOKENS;
 
     const results = await Promise.all(
       tokens.map((token: string) => capturePrice(token))

@@ -16,6 +16,17 @@ SmartDCA is a next-generation decentralized dollar-cost averaging protocol built
 
 ## 🏗️ Architecture
 
+### Configuration
+All configuration values are centralized in `src/lib/config.ts`, including:
+- API endpoints (Jupiter, LI.FI)
+- Token addresses and decimals
+- Swap parameters (slippage, fees)
+- Bridge configuration
+- Strategy limits and defaults
+- Error messages
+
+This makes it easy to adjust behavior without hunting through multiple files.
+
 ```
 User (Any Chain)
     │
@@ -223,7 +234,15 @@ ELEVENLABS_API_KEY=your_elevenlabs_key
 LIFI_API_KEY=your_lifi_api_key
 
 # Jupiter
-JUPITER_API_URL=https://quote-api.jup.ag/v6
+JUPITER_PRICE_API=https://lite-api.jup.ag/price/v3
+JUPITER_SWAP_API=https://lite-api.jup.ag/swap/v1
+
+# Application
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_SOLANA_NETWORK=devnet
+
+# LI.FI Bridge
+LIFI_API=https://li.quest/v1
 ```
 
 ---

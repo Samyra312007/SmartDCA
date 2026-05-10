@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { TOKEN_CONFIG, TX_CONFIG, STRATEGY_CONFIG } from "./config";
 
 export async function seedDemoData(walletAddress: string) {
   await supabase
@@ -12,13 +13,13 @@ export async function seedDemoData(walletAddress: string) {
     .insert([{
       wallet_address:    walletAddress,
       token_in:          "USDC",
-      token_in_mint:     "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+      token_in_mint:     TOKEN_CONFIG.USDC.MINT_DEVNET,
       token_out:         "SOL",
-      token_out_mint:    "So11111111111111111111111111111111111111112",
+      token_out_mint:    TOKEN_CONFIG.SOL.MINT,
       amount_per_trade:  50_000_000,   
       condition_type:    "price_drop_percent",
       condition_value:   500,           
-      condition_window:  24,
+      condition_window:  STRATEGY_CONFIG.DEFAULT_CONDITION_WINDOW,
       funded_amount:     500_000_000,   
       spent_amount:      150_000_000,   
       funded_from_chain: "ethereum",
@@ -41,7 +42,7 @@ export async function seedDemoData(walletAddress: string) {
         amount_in:      50,
         amount_out:     0.358,
         price_at_trade: 139.60,
-        tx_signature:   "demo_sig_1_" + Date.now(),
+        tx_signature:   TX_CONFIG.DEMO_PREFIX + "1_" + Date.now(),
         route_used:     "Raydium",
         price_impact:   0.02,
         created_at:     new Date(
@@ -54,7 +55,7 @@ export async function seedDemoData(walletAddress: string) {
         amount_in:      50,
         amount_out:     0.347,
         price_at_trade: 144.20,
-        tx_signature:   "demo_sig_2_" + Date.now(),
+        tx_signature:   TX_CONFIG.DEMO_PREFIX + "2_" + Date.now(),
         route_used:     "Orca",
         price_impact:   0.01,
         created_at:     new Date(
@@ -67,7 +68,7 @@ export async function seedDemoData(walletAddress: string) {
         amount_in:      50,
         amount_out:     0.374,
         price_at_trade: 133.80,
-        tx_signature:   "demo_sig_3_" + Date.now(),
+        tx_signature:   TX_CONFIG.DEMO_PREFIX + "3_" + Date.now(),
         route_used:     "Jupiter",
         price_impact:   0.03,
         created_at:     new Date(
@@ -82,13 +83,13 @@ export async function seedDemoData(walletAddress: string) {
     .insert([{
       wallet_address:    walletAddress,
       token_in:          "USDC",
-      token_in_mint:     "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+      token_in_mint:     TOKEN_CONFIG.USDC.MINT_DEVNET,
       token_out:         "JUP",
-      token_out_mint:    "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+      token_out_mint:    TOKEN_CONFIG.JUP.MINT,
       amount_per_trade:  25_000_000,   
       condition_type:    "day_of_week",
       condition_value:   1,             
-      condition_window:  24,
+      condition_window:  STRATEGY_CONFIG.DEFAULT_CONDITION_WINDOW,
       funded_amount:     200_000_000,   
       spent_amount:      75_000_000,    
       funded_from_chain: "base",
@@ -106,13 +107,13 @@ export async function seedDemoData(walletAddress: string) {
   await supabase.from("strategies").insert([{
     wallet_address:    walletAddress,
     token_in:          "USDC",
-    token_in_mint:     "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+    token_in_mint:     TOKEN_CONFIG.USDC.MINT_DEVNET,
     token_out:         "BONK",
-    token_out_mint:    "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    token_out_mint:    TOKEN_CONFIG.BONK.MINT,
     amount_per_trade:  10_000_000,    
     condition_type:    "price_below",
     condition_value:   2,             
-    condition_window:  24,
+    condition_window:  STRATEGY_CONFIG.DEFAULT_CONDITION_WINDOW,
     funded_amount:     100_000_000,   
     spent_amount:      0,
     funded_from_chain: "solana",
