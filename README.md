@@ -12,6 +12,8 @@ SmartDCA is a next-generation decentralized dollar-cost averaging protocol built
 
 **Key Innovation**: Instead of "buy $50 of SOL every Monday", you can set "buy $50 of SOL only when it drops 5% in 24 hours" or "buy $100 of JUP when RSI falls below 30".
 
+Demo Video: https://www.youtube.com/watch?v=s5o6E8Wc0GE
+
 ---
 
 ## 🏗️ Architecture
